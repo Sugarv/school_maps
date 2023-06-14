@@ -26,28 +26,137 @@
     }
 
     #result {
-      margin-top: 10px;
+      margin-top: 30px;
+      margin-bottom: 15px;
+      font-size: 1.2em;
+    }
+
+    #polygonContainer {
+      height: 400px; /* Adjust the height as needed */
+      overflow-y: auto;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Εντοπισμός σχολείου με διεύθυνση κατοικίας</h1>
-    <div class="form-group">
-      <label for="addressInput">Αναζήτηση</label>
-      <select class="form-control" id="addressInput" style="width: 100%;"></select>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#"></a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+      </ul>
+      <ul class='nav navbar-nav navbar-right'>
+        <li>
+          <a href="#" data-toggle="modal" id="about-btn" data-target="#aboutModal"><i class="fa fa-cog fa-info" ></i>&nbsp;&nbsp;Σχετικά&nbsp;&nbsp;&nbsp;&nbsp;</a>
+        </li>
+      </ul>
     </div>
-    <div class="map-container">
-      <div id="result"></div>
-      <div id="map"></div>
+  </nav>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-12">
+        <h1>Εντοπισμός σχολείου με διεύθυνση κατοικίας</h1>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12 col-md-3">
+        <div class="card">
+          <div class="card-header">
+            <h4 class = "card-title">Εισάγετε διεύθυνση κατοικίας:</h4>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="addressInput">Αναζήτηση</label>
+              <select class="form-control" id="addressInput" style="width: 100%;"></select>
+            </div>
+          </div>
+        </div>
+        <div id="result">
+          <h5>Εισάγετε διεύθυνση παραπάνω ή επιλέξτε σημείο στο χάρτη...</h5>
+        </div>
+        <div id="polygonContainer">
+          <!-- <ul id="polygonList"></ul> -->
+          <div class="card">
+            <div class="card-header">Λίστα σχολείων</div>
+            <div class="card-body">
+              <table id="polygonTable" class="table">
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      <div class="col-xs-12 col-md-9">
+        <div class="map-container">
+          
+          <div id="map"></div>
+        </div>
+      </div>
+    </div>
+    <div class="row" style="margin-top: -20px;">
       
-    </div>
+    </div>    
   </div>
+
+  <div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Σχετικά με την εφαρμογή</h4>
+          <button class="close" type="button" data-dismiss="modal" aria-hidden="true">&times;</button>
+        </div>
+        <div class="modal-body">
+
+              <p>Στον χάρτη αυτό απεικονίζονται οι περιοχές ευθύνης των δημόσιων νηπιαγωγείων σχολείων του Ν. Ηράκλειου.</p>
+              <div class="panel panel-primary">
+                <div class="panel-heading">Οδηγίες:</div>
+                <ul class="list-group">
+                  <li class="list-group-item">Επιλέξτε τη διεύθυνση της κατοικίας σας με έναν από τους παρακάτω τρόπους:</li>
+                  <li class="list-group-item">1. Εισαγωγή Διεύθυνσης - πληκτρολογήστε την διεύθυνση σας στο πεδίο (αν δε βγαίνει η διεύθυνση σας, διαλέξτε κάποια κοντινή οδό και κλικάρετε στον χάρτη)</li>
+                  <li class="list-group-item">2. Κλικάροντας στον χάρτη - Περιηγηθέιτε στον χάρτη και κλικάρετε στην θέση σας.</li>
+                  <li class="list-group-item"></li>
+                 </ul>
+              </div>            
+              <p>Η εφαρμογή αναπτύχθηκε στη <a href='https://dipeira.gov.gr/' target="_blank">Διεύθυνση της Πρωτοβάθμιας Εκπαίδευσης του Ν. Ηρακλείου</a></p>
+              
+              <p>Για περισσότερες πληροφορίες καθώς και για παρατηρήσεις και σχόλια για την εφαρμογή επικοινωνήστε με τον υπεύθυνο στο <a href="mailto:it@dipe.ira.sch.gr?Subject=Χάρτες" target="_top">it@dipe.ira.sch.gr</a>.</p>
+              <p>Το λογισμικό αυτό είναι ελεύθερο ανοικτού κώδικα και φιλοξενείται στο <a href="https://github.com/Sugarv/school_maps">Github&nbsp;<img src="images/github.png" alt=""></a></p>
+            
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Κλείσιμο</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+
+
+
+
+  <div class="container-fluid">
+    <br><br>
+    <div class="row">
+      <div class="col-md-12">
+        <div id="footer">
+        
+        <p style=" margin-top:10px;text-align: center" class="muted credit align-middle">Ψηφιοποίηση δεδομένων - Δημιουργία Χάρτη:
+          &nbsp;&nbsp;<a href="https://dipeira.gov.gr/site" target='_blank'><i class="fa fa-cog fa-spin"></i>Δ/νση Π.Ε. Ηρακλείου</a>
+        <a href="https://github.com/Sugarv/school_maps" target='_blank'><img style="margin-bottom:20px;" src="images/github.png" alt=""></a>
+      </div>
+    </div>   
+  </div>
+  </div>
+  
+  
 
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="script.js"></script>
+  <script src="script.js" type="module"></script>
 </body>
 </html>

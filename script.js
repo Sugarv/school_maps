@@ -1,12 +1,12 @@
+import { INITIAL_LAT, INITIAL_LONG, LOCATIONS_FILE, POLYGONS_FILE } from './params.js';
+
 $(document).ready(function() {
-  var map = L.map('map').setView([35.317817, 25.115727], 13);
+  var map = L.map('map').setView([INITIAL_LAT, INITIAL_LONG], 13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
     maxZoom: 18,
   }).addTo(map);
 
-  var polygonsFile = 'data/nipiagogeia_02_2022.geojson';
-  var locationsFile = 'data/nipiagogeia_locations.geojson';
 
   var addressInput = $('#addressInput');
   var marker;
@@ -52,13 +52,13 @@ $(document).ready(function() {
 
   // add school locations as a points layer and display school name on click
   function addPointsLayer() {
-    var pointsGeoJSON = locationsFile;
+    var pointsGeoJSON = LOCATIONS_FILE;
     $.getJSON(pointsGeoJSON, function(data) {
       var pointsLayer = L.geoJSON(data, {
         pointToLayer: function(feature, latlng) {
           return L.marker(latlng, {
             icon: L.icon({
-              iconUrl: 'data/school.png', // Path to your building icon image
+              iconUrl: 'images/school.png', // Path to your building icon image
               iconSize: [32, 32], // Adjust the size of the icon if needed
               iconAnchor: [16, 32], // Adjust the anchor point of the icon if needed
             })
@@ -79,19 +79,53 @@ $(document).ready(function() {
 
   // Function to add school polygons to the map
   function addPolygons() {
-    var polygons = [polygonsFile];
+    var polygons = [POLYGONS_FILE];
     for (var i = 0; i < polygons.length; i++) {
-      $.getJSON(polygons[i], function(data) {
-        var polygon = L.geoJSON(data).addTo(map);
-      });
+      (function(index) {
+        $.getJSON(polygons[index], function(data) {
+          var geojsonLayer = L.geoJSON(data, {
+            style: function(feature) {
+              // Define an array of colors
+              var colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff8000', '#008000', '#800080', '#808080', '#ff0080', '#00ff80'];
+  
+              // Assign a color based on the feature index
+              var colorIndex = feature.properties.cartodb_id % colors.length;
+              var color = colors[colorIndex];
+  
+              // Return the style object
+              return {
+                fillColor: color,
+                fillOpacity: 0.2,
+                color: 'black',
+                weight: 1
+              };
+            },
+            onEachFeature: function(feature, layer) {
+              if (layer instanceof L.Polygon) {
+                // Create a table row for each polygon
+                var tableRow = $('<tr>');
+                var tableCell = $('<td>').text(feature.properties.name);
+                tableRow.append(tableCell);
+                tableRow.on('click', function() {
+                  map.fitBounds(layer.getBounds());
+                });
+  
+                // Append the table row to the polygonTable
+                $('#polygonTable tbody').append(tableRow);
+              }
+            }
+          }).addTo(map);
+        });
+      })(i);
     }
   }
 
   // Function to check if a location is inside a polygon
   function checkPolygon(latlng) {
-    var polygons = [polygonsFile];
+    var polygons = [POLYGONS_FILE];
     var isInsidePolygon = false;
     var polygonName = '';
+    var polygonData = '';
   
     for (var i = 0; i < polygons.length; i++) {
       (function(index) {
@@ -101,10 +135,11 @@ $(document).ready(function() {
             if (layer instanceof L.Polygon && layer.getBounds().contains(latlng)) {
               isInsidePolygon = true;
               polygonName = layer.feature.properties.name;
+              polygonData = `Δ/νση: ${layer.feature.properties.address}<br>Τηλ.: ${layer.feature.properties.telephone}<br>email: ${layer.feature.properties.email}`;
             }
           });
           if (isInsidePolygon) {
-            const theMessage = `Η επιλεγμένη τοποθεσία ανήκει στο σχολείο: <b>${polygonName}</b>`;
+            const theMessage = `Η επιλεγμένη τοποθεσία ανήκει στο σχολείο: <br><br><b>${polygonName}</b><br>${polygonData}`;
             $('#result').html(theMessage);
             return polygonName;
           } else {
