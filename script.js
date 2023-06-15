@@ -139,7 +139,7 @@ $(document).ready(function() {
             }
           });
           if (isInsidePolygon) {
-            const theMessage = `Η επιλεγμένη τοποθεσία ανήκει στο σχολείο: <br><br><b>${polygonName}</b><br>${polygonData}`;
+            const theMessage = `Η επιλεγμένη τοποθεσία ανήκει στο σχολείο: <br><b>${polygonName}</b><br>${polygonData}`;
             $('#result').html(theMessage);
             return polygonName;
           } else {
@@ -212,17 +212,20 @@ $(document).ready(function() {
         marker.setLatLng(latlng)
           .setPopupContent(popupContent)
           .openPopup();
+        openPopupWithAddress(address, latlng);
       } else {
         marker = L.marker(latlng)
           .bindPopup(popupContent)
           .addTo(map)
           .openPopup();
+        openPopupWithAddress(address, latlng);
       }
+      // Reset the address input
+      addressInput.val(null).trigger('change');
     });
 
     map.setView(latlng, zoom);
     checkPolygon(latlng);
 
-    openPopupWithAddress('', latlng);    
   });
 });
