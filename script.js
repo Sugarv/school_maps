@@ -123,34 +123,42 @@ $(document).ready(function() {
   // Function to check if a location is inside a polygon
   function checkPolygon(latlng) {
     var polygons = [POLYGONS_FILE];
-    var isInsidePolygon = false;
-    var polygonName = '';
-    var polygonData = '';
-  
+    var promises = [];
+
+    $('#result').html('');
+
     for (var i = 0; i < polygons.length; i++) {
-      (function(index) {
-        $.getJSON(polygons[index], function(data) {
-          var geojsonLayer = L.geoJSON(data);
-          geojsonLayer.eachLayer(function(layer) {
-            if (layer instanceof L.Polygon && layer.getBounds().contains(latlng)) {
-              isInsidePolygon = true;
-              polygonName = layer.feature.properties.name;
-              polygonData = `Δ/νση: ${layer.feature.properties.address}<br>Τηλ.: ${layer.feature.properties.telephone}<br>email: ${layer.feature.properties.email}`;
-            }
-          });
-          if (isInsidePolygon) {
-            const theMessage = `Η επιλεγμένη τοποθεσία ανήκει στο σχολείο: <br><b>${polygonName}</b><br>${polygonData}`;
+        promises.push(new Promise(function (resolve) {
+            $.getJSON(polygons[i], function (data) {
+                var geojsonLayer = L.geoJSON(data);
+                geojsonLayer.eachLayer(function (layer) {
+                    if (layer instanceof L.Polygon && layer.getBounds().contains(latlng)) {
+                        resolve({
+                            name: layer.feature.properties.name,
+                            data: {
+                                address: layer.feature.properties.address,
+                                telephone: layer.feature.properties.telephone,
+                                email: layer.feature.properties.email
+                            }
+                        });
+                    }
+                });
+                resolve(null);
+            });
+        }));
+    }
+
+    Promise.all(promises).then(function (results) {
+        var foundResult = results.find(result => result !== null);
+
+        if (foundResult) {
+            const theMessage = `Η επιλεγμένη τοποθεσία ανήκει στο σχολείο: <br><b>${foundResult.name}</b><br>Δ/νση: ${foundResult.data.address}<br>Τηλ.: ${foundResult.data.telephone}<br>email: ${foundResult.data.email}`;
             $('#result').html(theMessage);
-            return polygonName;
-          } else {
+        } else {
             const theMessage = 'H επιλεγμένη τοποθεσία δεν ανήκει σε κάποιο σχολείο...';
             $('#result').html(theMessage);
-            return '';
-          }
-        });
-      })(i);
-    }
-    return '';
+        }
+    });
   }
   
   // Add polygons to the map
@@ -177,9 +185,6 @@ $(document).ready(function() {
     }
     if (data.address.city) {
       addr += data.address.city + ', ';
-    }
-    if (data.address.country) {
-      addr += data.address.country;
     }
     return addr;
   }
