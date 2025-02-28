@@ -40,10 +40,10 @@ addressInput.select2({
     },
     cache: true
   },
-  minimumInputLength: 1,
+  minimumInputLength: 3,
   language: {
     inputTooShort: function() {
-      return "Παρακαλώ εισάγετε 1 ή περισσότερους χαρακτήρες";
+      return "Παρακαλώ εισάγετε 3 ή περισσότερους χαρακτήρες";
     }
   }
 });
@@ -106,6 +106,10 @@ function addPolygons() {
                             var tableCell = $('<td>').text(feature.properties.name);
                             tableRow.append(tableCell);
                             tableRow.on('click', function() {
+                                // Remove active class from any existing active row
+                                $('#polygonTable tbody tr.active').removeClass('active table-primary');
+                                // Add active class to the clicked row
+                                $(this).addClass('active table-primary');
                                 map.fitBounds(layer.getBounds());
                             });
 
@@ -153,6 +157,16 @@ function checkPolygon(latlng) {
   if (foundResult) {
       const theMessage = `Η επιλεγμένη τοποθεσία ανήκει στο σχολείο: <br><b>${foundResult.name}</b><br>Δ/νση: ${foundResult.data.address}<br>Τηλ.: ${foundResult.data.telephone}<br>email: ${foundResult.data.email}`;
       $('#result').html(theMessage);
+
+      // Trigger click event on the corresponding table row
+      var selectedRow = $('#polygonTable tbody tr:contains("' + foundResult.name + '")');
+      selectedRow.click();
+
+      // Scroll the table to bring the selected row into view
+      selectedRow[0].scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
   } else {
       const theMessage = 'H επιλεγμένη τοποθεσία δεν ανήκει σε κάποιο σχολείο...';
       $('#result').html(theMessage);

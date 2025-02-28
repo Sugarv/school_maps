@@ -35,6 +35,10 @@
       height: 400px; /* Adjust the height as needed */
       overflow-y: auto;
     }
+
+    #polygonTable tbody tr.active {
+      background-color: #f0f0f0; /* Light grey background */
+    }
   </style>
 </head>
 <body>
@@ -82,7 +86,7 @@
           <div class="card">
             <div class="card-header">Λίστα σχολείων</div>
             <div class="card-body">
-              <table id="polygonTable" class="table">
+              <table id="polygonTable" class="table table-hover">
                 <tbody></tbody>
               </table>
             </div>
