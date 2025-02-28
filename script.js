@@ -1,211 +1,182 @@
 import { INITIAL_LAT, INITIAL_LONG, LOCATIONS_FILE, POLYGONS_FILE } from './params.js';
 
-$(document).ready(function() {
-  var map = L.map('map').setView([INITIAL_LAT, INITIAL_LONG], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
-    maxZoom: 18,
-  }).addTo(map);
+var map = L.map('map').setView([INITIAL_LAT, INITIAL_LONG], 13); // Adjust coordinates as needed
 
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 28,
+}).addTo(map);
 
-  var addressInput = $('#addressInput');
-  var marker;
-  var popup;
+var addressInput = $('#addressInput');
+var marker;
 
-  addressInput.select2({
-    placeholder: 'Εισάγετε ταχυδρομική διεύθυνση',
-    ajax: {
-      url: 'https://nominatim.openstreetmap.org/search',
-      dataType: 'json',
-      delay: 250,
-      data: function(params) {
-        var viewBounds = map.getBounds();
-        return {
-          q: params.term,
-          format: 'json',
-          bounded: 1,
-          viewbox: viewBounds.getWest() + ',' + viewBounds.getSouth() + ',' + viewBounds.getEast() + ',' + viewBounds.getNorth(),
-          accept_language: 'el'
-        };
-      },
-      processResults: function(data) {
-        return {
-          results: $.map(data, function(item) {
-            return {
-              id: item.place_id,
-              text: item.display_name,
-              lat: parseFloat(item.lat),
-              lon: parseFloat(item.lon),
-            };
-          })
-        };
-      },
-      cache: true
+addressInput.select2({
+  placeholder: 'Εισάγετε ταχυδρομική διεύθυνση',
+  ajax: {
+    url: 'https://nominatim.openstreetmap.org/search',
+    dataType: 'json',
+    delay: 250,
+    data: function(params) {
+      var viewBounds = map.getBounds();
+      return {
+        q: params.term,
+        format: 'json',
+        bounded: 1,
+        viewbox: viewBounds.getWest() + ',' + viewBounds.getSouth() + ',' + viewBounds.getEast() + ',' + viewBounds.getNorth(),
+        accept_language: 'el'
+      };
     },
-    minimumInputLength: 1,
-    language: {
-      inputTooShort: function() {
-        return "Παρακαλώ εισάγετε 1 ή περισσότερους χαρακτήρες";
-      }
+    processResults: function(data) {
+      return {
+        results: $.map(data, function(item) {
+          return {
+            id: item.place_id,
+            text: item.display_name,
+            lat: parseFloat(item.lat),
+            lon: parseFloat(item.lon),
+          };
+        })
+      };
+    },
+    cache: true
+  },
+  minimumInputLength: 1,
+  language: {
+    inputTooShort: function() {
+      return "Παρακαλώ εισάγετε 1 ή περισσότερους χαρακτήρες";
     }
-  });
-
-  // add school locations as a points layer and display school name on click
-  function addPointsLayer() {
-    var pointsGeoJSON = LOCATIONS_FILE;
-    $.getJSON(pointsGeoJSON, function(data) {
-      var pointsLayer = L.geoJSON(data, {
-        pointToLayer: function(feature, latlng) {
-          return L.marker(latlng, {
-            icon: L.icon({
-              iconUrl: 'images/school.png', // Path to your building icon image
-              iconSize: [32, 32], // Adjust the size of the icon if needed
-              iconAnchor: [16, 32], // Adjust the anchor point of the icon if needed
-            })
-          });
-        },
-        onEachFeature: function(feature, layer) {
-          layer.on('click', function(e) {
-            var popupContent = feature.properties.geozone_title;
-            layer.bindPopup(popupContent).openPopup();
-          });
-        }
-      }).addTo(map);
-    });
   }
-  
-  // Add points layer to the map
-  addPointsLayer();
+});
 
-  // Function to add school polygons to the map
-  function addPolygons() {
-    var polygons = [POLYGONS_FILE];
-    for (var i = 0; i < polygons.length; i++) {
-      (function(index) {
-        $.getJSON(polygons[index], function(data) {
-          var geojsonLayer = L.geoJSON(data, {
-            style: function(feature) {
-              // Define an array of colors
-              var colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff8000', '#008000', '#800080', '#808080', '#ff0080', '#00ff80'];
-  
-              // Assign a color based on the feature index
-              var colorIndex = feature.properties.cartodb_id % colors.length;
-              var color = colors[colorIndex];
-  
-              // Return the style object
-              return {
-                fillColor: color,
-                fillOpacity: 0.2,
-                color: 'black',
-                weight: 1
-              };
-            },
-            onEachFeature: function(feature, layer) {
-              if (layer instanceof L.Polygon) {
-                // Create a table row for each polygon
-                var tableRow = $('<tr>');
-                var tableCell = $('<td>').text(feature.properties.name);
-                tableRow.append(tableCell);
-                tableRow.on('click', function() {
-                  map.fitBounds(layer.getBounds());
-                });
-  
-                // Append the table row to the polygonTable
-                $('#polygonTable tbody').append(tableRow);
-              }
-            }
-          }).addTo(map);
+// add school locations as a points layer and display school name on click
+function addPointsLayer() {
+  var pointsGeoJSON = LOCATIONS_FILE;
+  $.getJSON(pointsGeoJSON, function(data) {
+    var pointsLayer = L.geoJSON(data, {
+      pointToLayer: function(feature, latlng) {
+        return L.marker(latlng, {
+          icon: L.icon({
+            iconUrl: 'images/school.png', // Path to your building icon image
+            iconSize: [32, 32], // Adjust the size of the icon if needed
+            iconAnchor: [16, 32], // Adjust the anchor point of the icon if needed
+          })
         });
-      })(i);
-    }
-  }
+      },
+      onEachFeature: function(feature, layer) {
+        layer.on('click', function(e) {
+          var popupContent = feature.properties.geozone_title;
+          layer.bindPopup(popupContent).openPopup();
+        });
+      }
+    }).addTo(map);
+  });
+}
 
-  // Function to check if a location is inside a polygon
-  function checkPolygon(latlng) {
+// Add points layer to the map
+addPointsLayer();
+
+var allPolygons = []; // Store all polygons globally
+
+// Function to add school polygons to the map
+function addPolygons() {
     var polygons = [POLYGONS_FILE];
-    var promises = [];
-
-    $('#result').html('');
 
     for (var i = 0; i < polygons.length; i++) {
-        promises.push(new Promise(function (resolve) {
-            $.getJSON(polygons[i], function (data) {
-                var geojsonLayer = L.geoJSON(data);
-                geojsonLayer.eachLayer(function (layer) {
-                    if (layer instanceof L.Polygon && layer.getBounds().contains(latlng)) {
-                        resolve({
-                            name: layer.feature.properties.name,
-                            data: {
-                                address: layer.feature.properties.address,
-                                telephone: layer.feature.properties.telephone,
-                                email: layer.feature.properties.email
-                            }
-                        });
+        (function(index) {
+            $.getJSON(polygons[index], function(data) {
+                var features = data.features.sort((a, b) => a.properties.name.localeCompare(b.properties.name));
+
+                var geojsonLayer = L.geoJSON(features, {
+                    style: function(feature) {
+                        // Define an array of colors
+                        var colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff8000', '#008000', '#800080', '#808080', '#ff0080', '#00ff80'];
+                        // Assign a color based on the feature index
+                        var colorIndex = feature.properties.cartodb_id % colors.length;
+                        return {
+                            fillColor: colors[colorIndex],
+                            fillOpacity: 0.2,
+                            color: 'black',
+                            weight: 1
+                        };
+                    },
+                    onEachFeature: function(feature, layer) {
+                        if (layer instanceof L.Polygon) {
+                            // Create a table row for each polygon
+                            var tableRow = $('<tr>');
+                            var tableCell = $('<td>').text(feature.properties.name);
+                            tableRow.append(tableCell);
+                            tableRow.on('click', function() {
+                                map.fitBounds(layer.getBounds());
+                            });
+
+                            // Append the table row to the polygonTable
+                            $('#polygonTable tbody').append(tableRow);
+                        }
                     }
-                });
-                resolve(null);
+                }).addTo(map);
+
+                allPolygons.push(geojsonLayer); // Store it globally for checking
             });
-        }));
+        })(i);
     }
+}
 
-    Promise.all(promises).then(function (results) {
-        var foundResult = results.find(result => result !== null);
+// Function to check if a location is inside a polygon
+function checkPolygon(latlng) {
+  $('#result').html('');
 
-        if (foundResult) {
-            const theMessage = `Η επιλεγμένη τοποθεσία ανήκει στο σχολείο: <br><b>${foundResult.name}</b><br>Δ/νση: ${foundResult.data.address}<br>Τηλ.: ${foundResult.data.telephone}<br>email: ${foundResult.data.email}`;
-            $('#result').html(theMessage);
-        } else {
-            const theMessage = 'H επιλεγμένη τοποθεσία δεν ανήκει σε κάποιο σχολείο...';
-            $('#result').html(theMessage);
-        }
-    });
-  }
-  
-  // Add polygons to the map
-  addPolygons();
+  let foundResult = null;
 
-  function openPopupWithAddress(address, latlng) {
-    if (popup) {
-      popup.setLatLng(latlng).setContent(address).openOn(map);
-    } else {
-      popup = L.popup({ closeButton: true })
-        .setLatLng(latlng)
-        .setContent(address)
-        .openOn(map);
-    }
-  }
+  allPolygons.forEach(geojsonLayer => {
+      geojsonLayer.eachLayer(layer => {
+          if (layer instanceof L.Polygon) {
+              var point = [latlng.lng, latlng.lat];
 
-  function shortenAddress(data) {
-    let addr = '';
-    if (data.address.road) {
-      addr += data.address.road + ', ';
-    }
-    if (data.address.postcode) {
-      addr += data.address.postcode + ', '; 
-    }
-    if (data.address.city) {
-      addr += data.address.city + ', ';
-    }
-    return addr;
-  }
+              // Convert layer to GeoJSON format
+              var poly = layer.toGeoJSON();
 
-  // Event handler for address selection
-  addressInput.on('select2:select', function(e) {
-    var data = e.params.data;
-    var latlng = L.latLng(data.lat, data.lon);
-    var zoom = map.getZoom();
-    map.setView(latlng, 24);
-    checkPolygon(latlng);
-    if (marker) {
-      map.removeLayer(marker);
-    }
-    marker = L.marker(latlng).addTo(map);
-    openPopupWithAddress(data.text, latlng);
+              // Check if the point is inside the polygon using leafletPip
+              if (leafletPip.pointInLayer(point, L.geoJSON(poly)).length > 0) {
+                  foundResult = {
+                      name: layer.feature.properties.name,
+                      data: {
+                          address: layer.feature.properties.address,
+                          telephone: layer.feature.properties.telephone,
+                          email: layer.feature.properties.email
+                      }
+                  };
+              }
+          }
+      });
   });
 
-  // Event handler for map click
-  map.on('click', function(e) {
-    var latlng = e.latlng;
+  if (foundResult) {
+      const theMessage = `Η επιλεγμένη τοποθεσία ανήκει στο σχολείο: <br><b>${foundResult.name}</b><br>Δ/νση: ${foundResult.data.address}<br>Τηλ.: ${foundResult.data.telephone}<br>email: ${foundResult.data.email}`;
+      $('#result').html(theMessage);
+  } else {
+      const theMessage = 'H επιλεγμένη τοποθεσία δεν ανήκει σε κάποιο σχολείο...';
+      $('#result').html(theMessage);
+  }
+}
+
+function shortenAddress(data) {
+  let addr = '';
+  if (data.address.road) {
+    addr += data.address.road + ', ';
+  }
+  if (data.address.postcode) {
+    addr += data.address.postcode + ', '; 
+  }
+  if (data.address.city) {
+    addr += data.address.city + ', ';
+  }
+  return addr;
+}
+
+
+// Event listener for map click
+map.on('click', function(e) {
+  var latlng = e.latlng;
     var zoom = map.getZoom();
 
     var geocodeUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}&zoom=18&addressdetails=1`;
@@ -217,20 +188,35 @@ $(document).ready(function() {
         marker.setLatLng(latlng)
           .setPopupContent(popupContent)
           .openPopup();
-        openPopupWithAddress(address, latlng);
       } else {
         marker = L.marker(latlng)
           .bindPopup(popupContent)
           .addTo(map)
           .openPopup();
-        openPopupWithAddress(address, latlng);
       }
       // Reset the address input
       addressInput.val(null).trigger('change');
     });
 
     map.setView(latlng, zoom);
-    checkPolygon(latlng);
+    checkPolygon(e.latlng);
+});
 
-  });
+addressInput.on('select2:select', function(e) {
+  var data = e.params.data;
+  var latlng = L.latLng(data.lat, data.lon);
+  map.setView(latlng, 18);
+  checkPolygon(latlng);
+  if (marker) {
+    map.removeLayer(marker);
+  }
+  marker = L.marker(latlng)
+      .bindPopup(data.text)
+      .addTo(map)
+      .openPopup();
+});
+
+// Load polygons when the page loads
+$(document).ready(function() {
+    addPolygons();
 });
