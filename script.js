@@ -83,44 +83,45 @@ function addPolygons() {
 
     for (var i = 0; i < polygons.length; i++) {
         (function(index) {
-            $.getJSON(polygons[index], function(data) {
-                var features = data.features.sort((a, b) => a.properties.name.localeCompare(b.properties.name));
-
-                var geojsonLayer = L.geoJSON(features, {
-                    style: function(feature) {
-                        // Define an array of colors
-                        var colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff8000', '#008000', '#800080', '#808080', '#ff0080', '#00ff80'];
-                        // Assign a color based on the feature index
-                        var colorIndex = feature.properties.cartodb_id % colors.length;
-                        return {
-                            fillColor: colors[colorIndex],
-                            fillOpacity: 0.2,
-                            color: 'black',
-                            weight: 1
-                        };
-                    },
-                    onEachFeature: function(feature, layer) {
-                        if (layer instanceof L.Polygon) {
-                            // Create a table row for each polygon
-                            var tableRow = $('<tr>');
-                            var tableCell = $('<td>').text(feature.properties.name);
-                            tableRow.append(tableCell);
-                            tableRow.on('click', function() {
-                                // Remove active class from any existing active row
-                                $('#polygonTable tbody tr.active').removeClass('active table-primary');
-                                // Add active class to the clicked row
-                                $(this).addClass('active table-primary');
-                                map.fitBounds(layer.getBounds());
-                            });
-
-                            // Append the table row to the polygonTable
-                            $('#polygonTable tbody').append(tableRow);
-                        }
+          $.getJSON(polygons[index], function(data) {
+            if (!data || !Array.isArray(data.features)) {
+                console.error("Invalid GeoJSON data:", data);
+                return;
+            }
+        
+            var features = data.features
+                .filter(feature => feature.properties && feature.properties.name) // Ensure valid properties
+                .sort((a, b) => a.properties.name.localeCompare(b.properties.name));
+        
+            var geojsonLayer = L.geoJSON(features, {
+                style: function(feature) {
+                    var colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff8000', '#008000', '#800080', '#808080', '#ff0080', '#00ff80'];
+                    var colorIndex = feature.properties.cartodb_id % colors.length;
+                    return {
+                        fillColor: colors[colorIndex],
+                        fillOpacity: 0.2,
+                        color: 'black',
+                        weight: 1
+                    };
+                },
+                onEachFeature: function(feature, layer) {
+                    if (layer instanceof L.Polygon) {
+                        var tableRow = $('<tr>');
+                        var tableCell = $('<td>').text(feature.properties.name);
+                        tableRow.append(tableCell);
+                        tableRow.on('click', function() {
+                            $('#polygonTable tbody tr.active').removeClass('active table-primary');
+                            $(this).addClass('active table-primary');
+                            map.fitBounds(layer.getBounds());
+                        });
+        
+                        $('#polygonTable tbody').append(tableRow);
                     }
-                }).addTo(map);
-
-                allPolygons.push(geojsonLayer); // Store it globally for checking
-            });
+                }
+            }).addTo(map);
+        
+            allPolygons.push(geojsonLayer);
+          });
         })(i);
     }
 }
